@@ -20,10 +20,19 @@ import readline from "readline";
 // Load .env if present (Node 20.6+)
 try { process.loadEnvFile(); } catch { /* no .env, rely on env vars */ }
 
-import { parseFilename as _parseFilename } from "../server/utils/parseFilename.js";
-
 const LEAGUE = "NFL";
-const parseFilename = (f) => _parseFilename(f, LEAGUE);
+
+function parseFilename(filename) {
+  const base = path.basename(filename, ".html");
+  const parts = base.split("-");
+  const endYear = parts.at(-1);
+  const startYear = parts.at(-2);
+  const position = parts[0];
+  const namePart = parts.slice(1, -2).join("-");
+  const name = namePart.replace(/_/g, " ");
+  if (!name || !/^\d{4}$/.test(startYear) || !/^\d{4}$/.test(endYear)) return null;
+  return { name, league: LEAGUE, position, years_active: `${startYear}-${endYear}`, external_id: base };
+}
 
 async function loadFilenames(filenames) {
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
